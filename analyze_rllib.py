@@ -1,160 +1,188 @@
-import seagul.envs
-from seagul.rl.run_utils import load_workspace
-from seagul.plot import smooth_bounded_curve
+# %%
 
-import random
-import gym
+import pandas as pd
+import matplotlib.pyplot as plt
+import json
+import ray
+import ray.rllib.agents.ppo as ppo
+import ray.rllib.agents.ddpg as ddpg
+import ray.rllib.agents.ddpg.td3 as td3
+
+import ray.rllib.agents.sac as sac
+import seagul.envs
 import numpy as np
 from numpy import pi
+import gym
 from mpl_toolkits.mplot3d import Axes3D
+# from simple_pid import PID
+
+import dill
+import pickle
+import gym
+import numpy as np
 import matplotlib.pyplot as plt
-import os
+import random
+import tensorflow as tf
 import itertools
 
-dtype = np.float32
+import pandas as pd
+from multiprocessing import Pool
+from itertools import product
+from seagul.plot import smooth_bounded_curve
+import os
+import time
+
+
 script_dir = os.path.dirname(__file__)
-trial_dir = script_dir + "/data/long_sg_ppo/var_sweep_1/"
 
-ws_list = []
-model_list = []
-max_size = 0
-for entry in os.scandir(trial_dir):
-    model, env, args, ws = load_workspace(entry.path)
-    #plt.plot(ws["raw_rew_hist"])
-    #plt.show()
-    if len(ws["raw_rew_hist"]) > max_size:
-        max_size = len(ws["raw_rew_hist"])
+# %%
+checkpoint_path = script_dir + "/data/tune/euler_but_working/PPO/PPO_linear_z-v0_3a87e5d2_2020-02-20_23-31-52h5407qju/checkpoint_910/checkpoint-910"
+config_path = '/'.join(checkpoint_path.split('/')[:-2]) + '/params.pkl'
+config = dill.load(open(config_path, 'rb'))
+env_name = config['env']
 
-    print(entry.path)
-    ws_list.append(ws)
-    model_list.append(model)
+csv_path = '/'.join(checkpoint_path.split('/')[:-2]) + '/progress.csv'
+df = pd.read_csv(csv_path)
+plt.plot(df['episode_reward_mean'])
 
-plt.show()
-rewards = np.zeros((max_size, len(ws_list)))
+ray.shutdown()
+ray.init()
 
-for i, ws in enumerate(ws_list):
-    # plt.plot(ws["raw_rew_hist"])
-    # plt.figure()
-    # print(len(ws["raw_rew_hist"]))
+trainer = ppo.PPOTrainer(config)  # , config['env_name'])
+# trainer = td3.TD3Trainer(config)
+# trainer = ddpg.DDPGTrainer(config)
+# trainer = sac.SACTrainer(config)
 
-    rewards[:len(ws["raw_rew_hist"]), i] = np.array(ws["raw_rew_hist"])
-
-fig, ax = smooth_bounded_curve(rewards, window=100)
-plt.show()
+trainer.restore(checkpoint_path)
 
 # %%
 
-ws = ws_list[-1]
-model = model_list[-1]
+directory = script_dir + "/data/tune/euler_but_working/PPO"
 
-plt.plot(ws['raw_rew_hist'], 'k')
-plt.title('Return')
-plt.show()
+df_list = []
 
-plt.plot(ws['pol_loss_hist'], 'k')
-plt.title('Policy loss')
-plt.show()
+for i, entry in enumerate(os.scandir(directory)):
+    try:
+        df_list.append(pd.read_csv(entry.path + "/progress.csv"))
+    except FileNotFoundError:
+        pass
 
-plt.plot(ws['val_loss_hist'], 'k')
-plt.title('Value loss')
-plt.show()
+rewards = np.zeros((df_list[0]['episode_reward_mean'].shape[0], len(df_list)))
+
+for i, df in enumerate(df_list):
+    rewards[:, i] = df['episode_reward_mean']
+
+smooth_bounded_curve(rewards)
+
 
 # %%
-env = gym.make(ws['env_name'], **ws['env_config'])
-
 
 def do_rollout(init_point):
+    env = gym.make(env_name, **config['env_config'])
     obs = env.reset(init_point)
-    obs = np.array(obs, dtype=dtype)
 
     action_hist = []
+    m_act_hist = []
     obs_hist = []
     reward_hist = []
-    logp_hist = []
 
     done = False
-    while not done:
-        sampled_actions, val, _, logp = model.step(obs.reshape(1, -1))
-        actions = sampled_actions.detach().reshape(-1)
 
+    while not done:
+        actions, _, out_dict = trainer.compute_action(obs, full_fetch=True)
         obs, reward, done, _ = env.step(np.asarray(actions))
-        obs = np.array(obs, dtype=dtype)
 
         action_hist.append(np.copy(actions))
         obs_hist.append(np.copy(obs))
         reward_hist.append(np.copy(reward))
-        logp_hist.append(logp.detach())
 
     action_hist = np.stack(action_hist)
     obs_hist = np.stack(obs_hist)
     reward_hist = np.stack(reward_hist)
-    logp_hist = np.stack(logp_hist)
 
-    return obs_hist, action_hist, reward_hist, logp_hist
+    return obs_hist, action_hist, reward_hist
 
+
+def do_det_rollout(init_point):
+    env = gym.make(env_name, **config['env_config'])
+    obs = env.reset(init_point)
+    obs[-1] = -10.0
+
+    action_hist = []
+    m_act_hist = []
+    obs_hist = []
+    reward_hist = []
+
+    done = False
+
+    while not done:
+        sampled_actions, _, out_dict = trainer.compute_action(obs, full_fetch=True)
+        actions = out_dict['behaviour_logits'][0:2]
+
+        obs, reward, done, _ = env.step(np.asarray(actions))
+        action_hist.append(np.copy(actions))
+        obs_hist.append(np.copy(obs))
+        reward_hist.append(np.copy(reward))
+
+    action_hist = np.stack(action_hist)
+    obs_hist = np.stack(obs_hist)
+    reward_hist = np.stack(reward_hist)
+
+    return obs_hist, action_hist, reward_hist
+
+
+# %% md
+
+# Rollouts
 
 # %%
-# X0 = np.array([1, 1,.3])
-X0 = np.random.random(3)
 
-obs_hist, action_hist, reward_hist, logp_hist = do_rollout(X0)
-
-plt.plot(np.clip(action_hist, -env.action_max, env.action_max))
-plt.title('Actions')
-plt.legend(['ux', 'uy'])
-plt.show()
-
-plt.plot(logp_hist)
-plt.title('Logp')
-plt.legend(['lgx', 'lqy'])
-plt.show()
-
-plt.plot(np.exp(logp_hist))
-plt.title('P')
-plt.legend(['lgx', 'lqy'])
-plt.show()
+X0 = np.array([-27.2586, 6.5937, -16.9758])
+X0 = np.array([1, 1, .3])
+config['env_config']['num_steps'] = 100
+obs_hist, action_hist, reward_hist = do_rollout(init_point=np.random.random(3))
+print(sum(reward_hist))
 
 plt.plot(obs_hist)
 plt.title('Observations')
 plt.legend(['x', 'y', 'z', 'r'])
 plt.show()
 
-plt.plot(reward_hist, 'k')
+plt.plot(reward_hist)
+plt.title("Rewards")
 plt.show()
 
+plt.plot(action_hist)
+plt.legend(['x', 'y'])
+plt.title('Actions')
+plt.show()
+
+plt.plot(action_hist[:, 0])
+plt.show()
 # %%
 
 obs_arr = np.stack(obs_hist)
-x = obs_arr[:, 0]
-y = obs_arr[:, 1]
+
+x = obs_arr[:, 0];
+y = obs_arr[:, 1];
 z = obs_arr[:, 2]
 
 fig = plt.figure(figsize=(16, 8))
 ax = fig.gca(projection='3d')
 ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
-plt.show()
+
+# %% md
+
+# Local Point Analysis
 
 # %%
 
-env = gym.make(ws['env_name'], **ws['env_config'])
-num_steps = env.num_steps
-env.num_steps = 5000
-obs_hist, _, _,_ = do_rollout(np.array([0, 0, 0]))
+num_steps = config['env_config']['num_steps']
+config['env_config']['num_steps'] = 5000
+obs_hist, _, _ = do_rollout(np.array([0, 0, 0]))
 limit_set = obs_hist[4900:, :]
-env.num_steps = num_steps
-
-obs_arr= np.stack(obs_hist)
-x = obs_arr[:, 0]
-y = obs_arr[:, 1]
-z = obs_arr[:, 2]
-
-fig = plt.figure(figsize=(16, 8))
-ax = fig.gca(projection='3d')
-ax.plot(x, y, z, alpha=0.7, linewidth=1)
-ax.set_title('phase diagram')
-plt.show()
-
+config['env_config']['num_steps'] = num_steps
 
 # %%
 
@@ -168,10 +196,12 @@ init_points = seed_point + deltas
 
 final_points = np.zeros_like(init_points)
 min_points = np.zeros_like(init_points)
-trajs = np.zeros((init_points.shape[0], env.num_steps + 1, init_points.shape[1]))
+trajs = np.zeros((init_points.shape[0], config['env_config']['num_steps'] + 1, init_points.shape[1]))
+
+trainer.get_policy().cur_noise_scale = 0.0
 
 for i, init_point in enumerate(init_points):
-    obs_hist, act_hist, rew_hist, _ = do_rollout(init_point)
+    obs_hist, act_hist, rew_hist = do_rollout(init_point)
     trajs[i, :] = obs_hist[:, :3]
 
 # %%
@@ -194,64 +224,71 @@ for i in range(trajs.shape[0]):
         min_dxz[i, t] = np.min(np.linalg.norm(trajs[i, t, 0::2] - limit_set[:, 0::2], axis=1))
 
 # %%
+fig = plt.figure(figsize=(8, 8))
 
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 0])
     plt.title("X trajectories, d* = " + str(dx))
-
 plt.show()
+
+plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 1])
     plt.title("Y trajectories, d* = " + str(dy))
-
 plt.show()
+
+plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 2])
     plt.title("Z trajectories, d* = " + str(dz))
 plt.show()
-
 
 # %%
 
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_d[i, :])
     plt.title("Euclidean distance from nominal, d* = " + str(dx))
+plt.show()
 
 plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_dxz[i, :])
     plt.title("Euclidean distance excluding Y from nominal, d* = " + str(dx))
+plt.show()
 
 plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_x[i, :])
     plt.title("X distance from nominal , d* = " + str(dx))
+plt.show()
 
 plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_y[i, :])
     plt.title("Y distance from nominal , d* = " + str(dx))
+plt.show()
 
 plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_z[i, :])
     plt.title("Z distance from nominal, d* = " + str(dx))
+plt.show()
 
 # %% md
 
 # Global point analysis
 
 # %%
-env = gym.make(ws['env_name'], **ws['env_config'])
-num_points = int(10)
-env.num_steps = 1000
+
+num_points = int(1e3)
+config["env_config"]["num_steps"] = 1000
 
 init_points = np.random.uniform(low=np.array([-10, -10, -10]), high=np.array([10, 10, 10]), size=(num_points, 3))
 final_points = np.zeros_like(init_points)
-trajs = np.zeros((init_points.shape[0], env.num_steps + 1, init_points.shape[1]))
+trajs = np.zeros((init_points.shape[0], config["env_config"]["num_steps"] + 1, init_points.shape[1]))
 
 for i, init_point in enumerate(init_points):
-    obs_hist, act_hist, rew_hist,_ = do_rollout(init_point)
+    obs_hist, act_hist, rew_hist = do_rollout(init_point)
     trajs[i, :] = obs_hist[:, :3]
     final_points[i, :] = obs_hist[-1, :3]
 
@@ -263,7 +300,6 @@ plt.axis('equal')
 plt.xlabel('x')
 plt.ylabel('z')
 plt.legend(['initial', 'final'])
-plt.show()
 
 # %% md
 
@@ -280,7 +316,7 @@ xs = np.linspace(0, 10, num_points)
 
 action_arr = np.zeros((num_points, 2))
 var = np.zeros((num_points, 2))
-logp = np.zeros((num_points, 2))
+logp = np.zeros((num_points, 1))
 vf_preds = np.zeros((num_points, 1))
 
 for i, xy in enumerate(zip(xs, ys)):
@@ -289,21 +325,16 @@ for i, xy in enumerate(zip(xs, ys)):
 
     obs[0] = x;  # obs[1] = y
 
-    obs = np.array(obs, dtype=dtype)
-    sampled_actions, val, _, lp = model.step(obs.reshape(1, -1))
-
-    actions = sampled_actions.detach()
-    var[i] = [.7, .7]
-    logp[i] = lp.detach()
-    vf_preds[i] = val.detach()
+    sampled_action, _, out_dict = trainer.compute_action(obs, full_fetch=True)
+    actions = out_dict['behaviour_logits'][0:2]
+    var[i] = out_dict['behaviour_logits'][2:]
+    logp[i] = out_dict['action_logp']
+    vf_preds[i] = out_dict['vf_preds']
 
     action_arr[i] = actions
 
 plt.plot(xs, action_arr[:, 0], 'x')
-plt.show()
-
 plt.plot(xs, action_arr[:, 1], 'x')
-plt.show()
 
 # %% md
 
@@ -311,12 +342,12 @@ plt.show()
 
 # %%
 
-env = gym.make(ws['env_name'], **ws['env_config'])
-num_steps = env.num_steps
-env.num_steps = 5000
-obs_hist, _, _,_ = do_rollout(np.array([0, 0, 0]))
-limit_set = obs_hist[4900:, :]
-env.num_steps = num_steps
+num_steps = config['env_config']['num_steps']
+config['env_config']['num_steps'] = 5000
+obs_hist, _, _ = do_rollout(np.array([0, 0, 0]))
+limit_set = obs_hist[4000:, :]
+config['env_config']['num_steps'] = num_steps
+
 
 # %%
 
@@ -376,7 +407,7 @@ plt.xscale('log')
 plt.gca().xaxis.grid(True, which='both')  # minor grid on too
 plt.gca().yaxis.grid(True, which='both')  # minor grid on too
 
-plt.show()
+plt.figure()
 
 plt.plot(xdata, ydata, 'bx')
 plt.plot(d_vals, mesh_sizes, 'gx--', alpha=.2)
@@ -387,12 +418,13 @@ plt.yscale('log')
 plt.xscale('log')
 plt.gca().xaxis.grid(True, which='both')  # minor grid on too
 plt.gca().yaxis.grid(True, which='both')  # minor grid on too
-plt.show()
 
 
 # %%
+
 def f(x, m, b):
     return m * x + b
+
 
 popt, pcov = opt.curve_fit(f, np.log(xdata), np.log(ydata))
 
@@ -401,4 +433,17 @@ plt.plot(np.log(xdata), f(np.log(xdata), *popt), 'r--')
 plt.legend(['linear region guess', 'fit: m*x + b,  m=%5.3f, b=%5.3f' % tuple(popt)])
 plt.gca().xaxis.grid(True)  # minor grid on too
 plt.gca().yaxis.grid(True)  # minor grid on too
-plt.show()
+
+# # %%
+#
+# from seagul.simulink_bots.share_weights import write_net
+#
+# p = trainer.get_policy()
+# d = {}
+# for key in p.get_weights().keys():
+#     if key.find('value') == -1:
+#         print(key)
+#         d[key] = p.get_weights()[key]
+#         print(d[key].shape)
+#
+# write_net('euler_net/', d.values(), num_layers=3)

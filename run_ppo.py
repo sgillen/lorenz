@@ -43,49 +43,50 @@ def reward_fn(s):
     return reward, s
 
 
-for seed in np.random.randint(0, 2 ** 32, 8):
-    policy = MLP(input_size, output_size * 2, num_layers, layer_size, activation)
-    value_fn = MLP(input_size, 1, num_layers, layer_size, activation)
+for var in [.5, 1, 2, 5, 10]:
+    for seed in np.random.randint(0, 2 ** 32, 8):
+        policy = MLP(input_size, output_size * 2, num_layers, layer_size, activation)
+        value_fn = MLP(input_size, 1, num_layers, layer_size, activation)
 
-    model = PPOModel(
-        policy=policy,
-        value_fn=value_fn,
-    )
+        model = PPOModel(
+            policy=policy,
+            value_fn=value_fn,
+        )
 
-    env_config = {
-        "reward_fn": reward_fn,
-        "xyz_max": float('inf'),
-        "num_steps": 100,
-        "act_hold": 10,
-        "integrator": euler,
-        "dt": .01,
-    }
+        env_config = {
+            "reward_fn": reward_fn,
+            "xyz_max": float('inf'),
+            "num_steps": 100,
+            "act_hold": 10,
+            "integrator": euler,
+            "dt": .01,
+        }
 
-    alg_config = {
-        "env_name": env_name,
-        "model": model,
-        "act_var_schedule": [5],
-        "seed": int(seed),  # int((time.time() % 1)*1e8),
-        "total_steps": 1e6,
-        "epoch_batch_size": 1024,
-        "pol_batch_size": 512,
-        "val_batch_size": 1024,
-        "lam": .2,
-        "gamma": .95,
-        "normalize_return": False,
-        "env_config": env_config
-    }
+        alg_config = {
+            "env_name": env_name,
+            "model": model,
+            "act_var_schedule": [var],
+            "seed": int(seed),  # int((time.time() % 1)*1e8),
+            "total_steps": 2e6,
+            "epoch_batch_size": 1024,
+            "pol_batch_size": 512,
+            "val_batch_size": 1024,
+            "lam": .2,
+            "gamma": .95,
+            "normalize_return": False,
+            "env_config": env_config
+        }
 
 
- #   run_sg(alg_config, ppo, "ppo", "act hold this time", "/data/" + trial_num + "/" + "seed" + str(seed))
+     #   run_sg(alg_config, ppo, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
-    p = Process(
-        target=run_sg,
-        args=(alg_config, ppo, "ppo", "act hold this time", "/data/" + trial_num + "/" + "seed" + str(seed)),
-    )
-    p.start()
-    proc_list.append(p)
+        p = Process(
+            target=run_sg,
+            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data/long_sg_ppo/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
+        )
+        p.start()
+        proc_list.append(p)
 
-for p in proc_list:
-    print("joining")
-    p.join()
+    for p in proc_list:
+        print("joining")
+        p.join()
