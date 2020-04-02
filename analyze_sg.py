@@ -13,7 +13,7 @@ import os
 import itertools
 
 dtype = np.float32
-directory = "/home/sgillen/work/lorenz/data/fr"
+directory = "/home/sgillen/work/lorenz_mat/data/fr"
 ws_list = []
 model_list = []
 max_size = 0

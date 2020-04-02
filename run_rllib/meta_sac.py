@@ -11,7 +11,7 @@ from multiprocessing import Process
 
 
 env_name = "linear_z-v0"
-#env_name = "lorenz-v0"
+#env_name = "lorenz_mat-v0"
 env = gym.make(env_name)
 
 input_size = env.observation_space.shape[0]
