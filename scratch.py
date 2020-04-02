@@ -1,8 +1,5 @@
 import seagul.envs
 import gym
-
-env = gym.make('su_acrobot-v0')
-
 import numpy as np
 from numpy import pi
 import matplotlib.pyplot as plt

@@ -28,5 +28,5 @@ config["metrics_smoothing_episodes"] = 10
 # config["log_level"] = "DEBUG"
 
 analysis = tune.run(
-    sac.SACTrainer, config=config, stop={"timesteps_total": 5e4}, local_dir="./data/sac/", checkpoint_at_end=True
+    sac.SACTrainer, config=config, stop={"timesteps_total": 5e4}, local_dir="../data/sac/", checkpoint_at_end=True
 )

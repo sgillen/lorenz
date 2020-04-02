@@ -59,6 +59,6 @@ analysis = tune.run(
     config=config,
     stop={"timesteps_total": 8e6},
     num_samples=4,
-    local_dir="./data/tune/euler_250_long",
+    local_dir="../data/tune/euler_250_long",
     checkpoint_at_end=True,
 )

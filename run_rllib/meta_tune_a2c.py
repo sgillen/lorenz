@@ -13,5 +13,5 @@ config["model"]["fcnet_hiddens"] = [64, 64]
 # config["log_level"] = "DEBUG"
 
 analysis = tune.run(
-    a3c.A3CTrainer, config=config, stop={"timesteps_total": 5e5}, local_dir="./data/a2c/", checkpoint_at_end=True
+    a3c.A3CTrainer, config=config, stop={"timesteps_total": 5e5}, local_dir="../data/a2c/", checkpoint_at_end=True
 )

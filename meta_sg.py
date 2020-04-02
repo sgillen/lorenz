@@ -2,13 +2,11 @@ import gym
 import seagul.envs
 
 from seagul.rl.run_utils import run_sg
-from seagul.rl.algos import ppo
-from seagul.rl.models import PPOModel, PPOModelActHold
+from seagul.rl.ppo import ppo, PPOModel
 from seagul.nn import MLP
 
 import torch.nn as nn
 from multiprocessing import Process
-
 
 env_name = "linear_z-v0"
 #env_name = "lorenz-v0"
@@ -21,9 +19,6 @@ num_layers = 2
 activation = nn.ReLU
 
 for seed in [0,1,2,3]:
-
-
-
     policy = MLP(input_size, output_size, num_layers, layer_size, activation)
     value_fn = MLP(input_size, 1, num_layers, layer_size, activation)
 

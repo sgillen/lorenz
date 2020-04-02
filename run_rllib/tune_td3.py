@@ -46,6 +46,6 @@ analysis = tune.run(
     config=config,
     stop={"timesteps_total": 5e5, "time_total_s": 1800}, #900s == 15m
     num_samples=4,
-    local_dir="./data/tune/box_reward",
+    local_dir="../data/tune/box_reward",
     checkpoint_at_end=True,
 )
