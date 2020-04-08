@@ -11,15 +11,17 @@ from numpy import pi
 
 # init policy, value fn
 input_size = 4
-output_size = 1
-layer_size = 16
-num_layers = 2
+output_size = 2
+layer_size = 64
+num_layers = 4
 activation = nn.ReLU
 
 from seagul.rl.run_utils import run_sg, run_and_save_bs
 from seagul.rl.ppo import ppo, PPOModel, PPOModelActHold
 from seagul.nn import MLP, CategoricalMLP
 from seagul.integration import euler, rk4
+#from seagul.integrationx import euler
+
 
 proc_list = []
 trial_num = input("What trial is this?\n")
@@ -43,7 +45,7 @@ def reward_fn(s):
     return reward, s
 
 
-for var in [.5, 1, 2, 5, 10]:
+for var in [2]:
     for seed in np.random.randint(0, 2 ** 32, 8):
         policy = MLP(input_size, output_size * 2, num_layers, layer_size, activation)
         value_fn = MLP(input_size, 1, num_layers, layer_size, activation)
@@ -51,6 +53,7 @@ for var in [.5, 1, 2, 5, 10]:
         model = PPOModel(
             policy=policy,
             value_fn=value_fn,
+            fixed_std=False
         )
 
         env_config = {
@@ -78,11 +81,11 @@ for var in [.5, 1, 2, 5, 10]:
         }
 
 
-     #   run_sg(alg_config, ppo, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
+        #run_sg(alg_config, ppo, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data/long_sg_ppo/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data2/sg_ppo_fixed/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)

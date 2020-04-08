@@ -13,7 +13,7 @@ import itertools
 
 dtype = np.float32
 script_dir = os.path.dirname(__file__)
-trial_dir = script_dir + "/data/long_sg_ppo/var_sweep_1/"
+trial_dir = script_dir + "/data2/sg_ppo_fixed/fixed_redo_2"
 
 ws_list = []
 model_list = []
@@ -44,8 +44,8 @@ plt.show()
 
 # %%
 
-ws = ws_list[-1]
-model = model_list[-1]
+ws = ws_list[3]
+model = model_list[3]
 
 plt.plot(ws['raw_rew_hist'], 'k')
 plt.title('Return')
@@ -90,7 +90,7 @@ def do_rollout(init_point):
     reward_hist = np.stack(reward_hist)
     logp_hist = np.stack(logp_hist)
 
-    return obs_hist, action_hist, reward_hist, logp_hist
+    return obs_hist, action_hist, reward_hist, logp_hist.reshape(-1, logp_hist.shape[1])
 
 
 # %%
@@ -155,6 +155,15 @@ ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
 plt.show()
 
+plt.plot(x)
+plt.title("X")
+plt.show()
+plt.plot(y)
+plt.title("Y")
+plt.show()
+plt.plot(z)
+plt.title("Z")
+plt.show()
 
 # %%
 
@@ -198,13 +207,13 @@ for i in range(trajs.shape[0]):
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 0])
     plt.title("X trajectories, d* = " + str(dx))
-
 plt.show()
+
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 1])
     plt.title("Y trajectories, d* = " + str(dy))
-
 plt.show()
+
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 2])
     plt.title("Z trajectories, d* = " + str(dz))
