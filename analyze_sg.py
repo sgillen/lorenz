@@ -13,7 +13,8 @@ import itertools
 
 dtype = np.float32
 script_dir = os.path.dirname(__file__)
-trial_dir = script_dir + "/data2/sg_ppo_fixed/fixed_redo_2"
+#trial_dir = script_dir + "/data2/sg_ppo_fixed/deep_longer_2"
+trial_dir = "/home/sgillen/work/lorenz/data2/sg_ppo_fixed/deep_2"
 
 ws_list = []
 model_list = []
@@ -21,7 +22,7 @@ max_size = 0
 for entry in os.scandir(trial_dir):
     model, env, args, ws = load_workspace(entry.path)
     #plt.plot(ws["raw_rew_hist"])
-    #plt.show()
+    #plt.show(); plt.figure()
     if len(ws["raw_rew_hist"]) > max_size:
         max_size = len(ws["raw_rew_hist"])
 
@@ -29,7 +30,7 @@ for entry in os.scandir(trial_dir):
     ws_list.append(ws)
     model_list.append(model)
 
-plt.show()
+plt.show(); plt.figure()
 rewards = np.zeros((max_size, len(ws_list)))
 
 for i, ws in enumerate(ws_list):
@@ -40,28 +41,27 @@ for i, ws in enumerate(ws_list):
     rewards[:len(ws["raw_rew_hist"]), i] = np.array(ws["raw_rew_hist"])
 
 fig, ax = smooth_bounded_curve(rewards, window=100)
-plt.show()
+plt.show(); plt.figure()
 
 # %%
 
-ws = ws_list[3]
-model = model_list[3]
+ws = ws_list[-1]
+model = model_list[-1]
 
-plt.plot(ws['raw_rew_hist'], 'k')
+plt.plot(ws['raw_rew_hist'], 'ko')
 plt.title('Return')
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(ws['pol_loss_hist'], 'k')
 plt.title('Policy loss')
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(ws['val_loss_hist'], 'k')
 plt.title('Value loss')
-plt.show()
+plt.show(); plt.figure()
 
 # %%
 env = gym.make(ws['env_name'], **ws['env_config'])
-
 
 def do_rollout(init_point):
     obs = env.reset(init_point)
@@ -95,32 +95,33 @@ def do_rollout(init_point):
 
 # %%
 # X0 = np.array([1, 1,.3])
-X0 = np.random.random(3)
+X0 = np.random.random(3)*10
+
 
 obs_hist, action_hist, reward_hist, logp_hist = do_rollout(X0)
 
 plt.plot(np.clip(action_hist, -env.action_max, env.action_max))
 plt.title('Actions')
 plt.legend(['ux', 'uy'])
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(logp_hist)
 plt.title('Logp')
 plt.legend(['lgx', 'lqy'])
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(np.exp(logp_hist))
 plt.title('P')
 plt.legend(['lgx', 'lqy'])
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(obs_hist)
 plt.title('Observations')
 plt.legend(['x', 'y', 'z', 'r'])
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(reward_hist, 'k')
-plt.show()
+plt.show(); plt.figure()
 
 # %%
 
@@ -133,7 +134,7 @@ fig = plt.figure(figsize=(16, 8))
 ax = fig.gca(projection='3d')
 ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
-plt.show()
+plt.show(); plt.figure()
 
 # %%
 
@@ -153,17 +154,17 @@ fig = plt.figure(figsize=(16, 8))
 ax = fig.gca(projection='3d')
 ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(x)
 plt.title("X")
-plt.show()
+plt.show(); plt.figure()
 plt.plot(y)
 plt.title("Y")
-plt.show()
+plt.show(); plt.figure()
 plt.plot(z)
 plt.title("Z")
-plt.show()
+plt.show(); plt.figure()
 
 # %%
 
@@ -207,17 +208,17 @@ for i in range(trajs.shape[0]):
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 0])
     plt.title("X trajectories, d* = " + str(dx))
-plt.show()
+plt.show(); plt.figure()
 
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 1])
     plt.title("Y trajectories, d* = " + str(dy))
-plt.show()
+plt.show(); plt.figure()
 
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(trajs[i, :, 2])
     plt.title("Z trajectories, d* = " + str(dz))
-plt.show()
+plt.show(); plt.figure()
 
 
 # %%
@@ -225,26 +226,27 @@ plt.show()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_d[i, :])
     plt.title("Euclidean distance from nominal, d* = " + str(dx))
+plt.show(); plt.figure()
 
-plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_dxz[i, :])
     plt.title("Euclidean distance excluding Y from nominal, d* = " + str(dx))
+plt.show(); plt.figure()
 
-plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_x[i, :])
     plt.title("X distance from nominal , d* = " + str(dx))
+plt.show(); plt.figure()
 
-plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_y[i, :])
     plt.title("Y distance from nominal , d* = " + str(dx))
+plt.show(); plt.figure()
 
-plt.figure()
 for i, _ in enumerate(trajs[:, 0, 0]):
     plt.plot(min_z[i, :])
     plt.title("Z distance from nominal, d* = " + str(dx))
+plt.show(); plt.figure()
 
 # %% md
 
@@ -252,15 +254,15 @@ for i, _ in enumerate(trajs[:, 0, 0]):
 
 # %%
 env = gym.make(ws['env_name'], **ws['env_config'])
-num_points = int(10)
-env.num_steps = 1000
+num_points = int(0)
+env.num_steps = 100
 
 init_points = np.random.uniform(low=np.array([-10, -10, -10]), high=np.array([10, 10, 10]), size=(num_points, 3))
 final_points = np.zeros_like(init_points)
 trajs = np.zeros((init_points.shape[0], env.num_steps + 1, init_points.shape[1]))
 
 for i, init_point in enumerate(init_points):
-    obs_hist, act_hist, rew_hist,_ = do_rollout(init_point)
+    obs_hist, act_hist, rew_hist, _ = do_rollout(init_point)
     trajs[i, :] = obs_hist[:, :3]
     final_points[i, :] = obs_hist[-1, :3]
 
@@ -272,7 +274,7 @@ plt.axis('equal')
 plt.xlabel('x')
 plt.ylabel('z')
 plt.legend(['initial', 'final'])
-plt.show()
+plt.show(); plt.figure()
 
 # %% md
 
@@ -309,10 +311,10 @@ for i, xy in enumerate(zip(xs, ys)):
     action_arr[i] = actions
 
 plt.plot(xs, action_arr[:, 0], 'x')
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(xs, action_arr[:, 1], 'x')
-plt.show()
+plt.show(); plt.figure()
 
 # %% md
 
@@ -385,7 +387,7 @@ plt.xscale('log')
 plt.gca().xaxis.grid(True, which='both')  # minor grid on too
 plt.gca().yaxis.grid(True, which='both')  # minor grid on too
 
-plt.show()
+plt.show(); plt.figure()
 
 plt.plot(xdata, ydata, 'bx')
 plt.plot(d_vals, mesh_sizes, 'gx--', alpha=.2)
@@ -396,7 +398,7 @@ plt.yscale('log')
 plt.xscale('log')
 plt.gca().xaxis.grid(True, which='both')  # minor grid on too
 plt.gca().yaxis.grid(True, which='both')  # minor grid on too
-plt.show()
+plt.show(); plt.figure()
 
 
 # %%
@@ -410,4 +412,4 @@ plt.plot(np.log(xdata), f(np.log(xdata), *popt), 'r--')
 plt.legend(['linear region guess', 'fit: m*x + b,  m=%5.3f, b=%5.3f' % tuple(popt)])
 plt.gca().xaxis.grid(True)  # minor grid on too
 plt.gca().yaxis.grid(True)  # minor grid on too
-plt.show()
+plt.show(); plt.figure()
