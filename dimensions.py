@@ -3,11 +3,12 @@ import random
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import copy
+import time
 
 # %%
 
-X = np.load('./trajs/div.npy')
-X = X[-200:]
+X = np.load('./trajs/conv.npy')
+X = X[-1000:]
 
 # %%
 
@@ -24,9 +25,10 @@ def removearray(L, arr):
 
 d_min = 1e-8;
 d_max = 400
-d_vals = np.linspace(d_min, d_max, 2000)
+d_vals = np.linspace(d_min, d_max, 2000);
 mesh_sizes = []
 
+start = time.time()
 for d in d_vals:
     orig = []
     mesh = []
@@ -48,6 +50,7 @@ for d in d_vals:
 
     mesh_sizes.append(len(mesh))
 
+print(time.time() - start)
 # %%
 
 for i, m in enumerate(mesh_sizes):
