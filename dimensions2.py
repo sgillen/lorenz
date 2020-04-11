@@ -5,7 +5,8 @@ import scipy.optimize as opt
 
 traj_name = "conv.npy"
 X = np.load('../trajs/' + traj_name)
-X = X[-1000:]
+X = X[:,0].reshape(-1,1)
+#X = X[-1000:]
 
 start = time.time()
 
@@ -40,9 +41,7 @@ for i, m in enumerate(mesh_sizes):
         lin_begin = i
         break
 
-
-
-plt.plot(X[-1000:])
+plt.plot(X)
 plt.title("Trajectory " + traj_name)
 plt.legend(['x', 'y', 'z', 'r'])
 plt.show(); plt.figure()
