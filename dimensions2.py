@@ -8,6 +8,21 @@ X = np.load('../trajs/' + traj_name)
 X = X[:,0].reshape(-1,1)
 #X = X[-1000:]
 
+def create_mesh(data, d):
+    mesh = []
+    in_mesh = np.zeros(data.shape[0], dtype=np.bool)
+
+    for i, x in enumerate(data):
+
+        if in_mesh[i]:
+            continue
+        else:
+            mesh.append(x)
+            in_criteria = np.linalg.norm(mesh[-1] - X, axis=1) < d
+            in_mesh = np.logical_or(in_mesh, in_criteria)
+
+    return mesh
+
 start = time.time()
 
 d = 1e-3
@@ -17,15 +32,7 @@ while True:
     mesh = []
     in_mesh = np.zeros(X.shape[0],dtype=np.bool)
 
-    for i, x in enumerate(X):
-
-        if in_mesh[i]:
-            continue
-        else:
-            mesh.append(x)
-            in_criteria = np.linalg.norm(mesh[-1] - X, axis=1) < d
-            in_mesh = np.logical_or(in_mesh, in_criteria)
-
+    mesh = create_mesh(X,d)
     mesh_sizes.append(len(mesh))
     d_vals.append(d)
 
@@ -35,6 +42,7 @@ while True:
     d = d*2
 
 print(time.time() - start)
+
 
 for i, m in enumerate(mesh_sizes):
     if m < X.shape[0]:
