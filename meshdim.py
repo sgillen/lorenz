@@ -25,7 +25,7 @@ def create_mesh(data, d):
             continue
         else:
             mesh.append(x)
-            in_criteria = np.linalg.norm(mesh[-1] - X, axis=1) < d
+            in_criteria = np.linalg.norm(mesh[-1] - X, axis=1, ord=1) < d
             in_mesh = np.logical_or(in_mesh, in_criteria)
 
     return mesh
@@ -58,7 +58,7 @@ for i, m in enumerate(mesh_sizes):
 plt.plot(X)
 plt.title("Trajectory " + traj_name)
 plt.legend(['x', 'y', 'z', 'r'])
-plt.show(); plt.figure()
+plt.show()
 
 xdata = np.array(d_vals[lin_begin:])
 ydata = np.array(mesh_sizes[lin_begin:])
@@ -73,7 +73,7 @@ plt.xscale('log')
 plt.gca().xaxis.grid(True, which='both')  # minor grid on too
 plt.gca().yaxis.grid(True, which='both')  # minor grid on too
 
-plt.show(); plt.figure()
+plt.show()
 
 
 # %%
