@@ -2,7 +2,7 @@ import numpy as np
 import time
 
 # Implements the variation estimators described here: https://arxiv.org/pdf/1101.1444.pdf
-traj_name = "conv.npy"
+traj_name = "div.npy"
 X = np.load('./trajs/' + traj_name)
 X = X[:,0].reshape(-1,1)
 #X = X[-1000:]
