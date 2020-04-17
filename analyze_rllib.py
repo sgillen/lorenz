@@ -36,7 +36,8 @@ import time
 script_dir = os.path.dirname(__file__)
 
 # %%
-checkpoint_path = script_dir + "/data/tune/euler_but_working/PPO/PPO_linear_z-v0_3a87e5d2_2020-02-20_23-31-52h5407qju/checkpoint_910/checkpoint-910"
+checkpoint_path = script_dir + "/data/tune/euler_but_working/PPO/PPO_linear_z-v0_3a87e5d2_2020-02-20_23-31-52h5407qju" \
+                               "/checkpoint_910/checkpoint-910 "
 config_path = '/'.join(checkpoint_path.split('/')[:-2]) + '/params.pkl'
 config = dill.load(open(config_path, 'rb'))
 env_name = config['env']

@@ -1,5 +1,7 @@
+import ray
 from ray import tune
 import ray.rllib.agents.ppo as ppo
+import seagul.envs
 
 config = ppo.DEFAULT_CONFIG.copy()
 config["num_workers"] = 1
@@ -21,11 +23,18 @@ env_name =  "Walker2DBulletEnv-v0"
 config["env"] = env_name
 config["no_done_at_end"] = True
 
+ray.init(
+    num_cpus=6,
+    memory=int(4e9),
+    object_store_memory=int(2e9),
+    driver_object_store_memory= int(1e9)
+)
+
 analysis = tune.run(
     ppo.PPOTrainer,
     config=config,
     stop={"timesteps_total": 8e6},
     num_samples=4,
-    local_dir="../data/tune/euler_250_long",
+    local_dir="../data/tune/walker",
     checkpoint_at_end=True,
 )
