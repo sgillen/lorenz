@@ -92,9 +92,9 @@ ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
 #fig.savefig(script_path + '../figs/reward.png')
 plt.show()
 
-from stable_baselines import TRPO as ALGO
+from stable_baselines import TD3 as ALGO
 
-model = ALGO.load("/home/sgillen/work/lorenz/walker_log/trpo/Walker2DBulletEnv-v0_1/best_model.zip")
+model = ALGO.load("/home/sgillen/work/third_party/rl-baselines-zoo/trained_agents/td3/Walker2DBulletEnv-v0.pkl")
 
 obs_hist, act_hist, rew_hist = do_rollout_stable()
 

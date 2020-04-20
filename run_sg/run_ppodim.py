@@ -1,30 +1,46 @@
 from multiprocessing import Process
-import seagul.envs
-
-import gym
 
 env_name = "linear_z-v0"
-import torch
 import torch.nn as nn
 import numpy as np
-from numpy import pi
 
 # init policy, value fn
 input_size = 4
 output_size = 2
 layer_size = 64
-num_layers = 4
+num_layers = 2
 activation = nn.ReLU
 
-from seagul.rl.run_utils import run_sg, run_and_save_bs
-from seagul.rl.ppo import ppo, PPOModel, PPOModelActHold
-from seagul.nn import MLP, CategoricalMLP
-from seagul.integration import euler, rk4
+from seagul.rl.run_utils import run_sg
+from ppo_dim import ppo
+from seagul.rl.ppo import PPOModel
+from seagul.nn import MLP
+from seagul.integration import euler
+import seagul.envs
+
 #from seagul.integrationx import euler
 
 
 proc_list = []
 trial_num = input("What trial is this?\n")
+
+#
+# def reward_fn(s):
+#     if s[3] > 0:
+#         if s[0] >= 0 and s[2] >= 0:
+#             reward = s[0]
+#             s[3] = -10
+#         else:
+#             reward = 0.0
+#
+#     elif s[3] < 0:
+#         if s[0] <= 0 and s[2] <= 0:
+#             reward = -s[0]
+#             s[3] = 10
+#         else:
+#             reward = 0.0
+#
+#     return reward, s
 
 
 def reward_fn(s):
@@ -56,18 +72,21 @@ for var in [2]:
             fixed_std=False
         )
 
+        num_steps = 500
         env_config = {
             "reward_fn": reward_fn,
             "xyz_max": float('inf'),
-            "num_steps": 100,
+            "num_steps": num_steps,
             "act_hold": 10,
             "integrator": euler,
             "dt": .01,
+            "init_noise_max": 10,
         }
 
         alg_config = {
             "env_name": env_name,
             "model": model,
+            "transient_length" : int(num_steps/2),
             "act_var_schedule": [var],
             "seed": int(seed),  # int((time.time() % 1)*1e8),
             "total_steps": 2e6,
@@ -77,7 +96,9 @@ for var in [2]:
             "lam": .2,
             "gamma": .95,
             "normalize_return": False,
-            "env_config": env_config
+            "env_config": env_config,
+            "pol_epochs" : 50,
+            "val_epochs" : 30,
         }
 
 
@@ -85,7 +106,7 @@ for var in [2]:
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data2/sg_ppo_fixed/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data/dim/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)

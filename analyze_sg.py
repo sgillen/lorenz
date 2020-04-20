@@ -14,7 +14,7 @@ import itertools
 dtype = np.float32
 script_dir = os.path.dirname(__file__)
 #trial_dir = script_dir + "/data2/sg_ppo_fixed/deep_longer_2"
-trial_dir = "/home/sgillen/work/lorenz/data2/sg_ppo_fixed/deep_2"
+trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/0_2"
 
 ws_list = []
 model_list = []
