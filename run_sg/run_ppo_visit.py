@@ -12,7 +12,7 @@ num_layers = 2
 activation = nn.ReLU
 
 from seagul.rl.run_utils import run_sg
-from seagul.rl.ppo import ppo, PPOModel
+from seagul.rl.ppo import ppo_visit, PPOModel
 from seagul.nn import MLP
 from seagul.integration import euler
 import seagul.envs
@@ -22,24 +22,6 @@ import seagul.envs
 
 proc_list = []
 trial_num = input("What trial is this?\n")
-
-#
-# def reward_fn(s):
-#     if s[3] > 0:
-#         if s[0] >= 0 and s[2] >= 0:
-#             reward = s[0]
-#             s[3] = -10
-#         else:
-#             reward = 0.0
-#
-#     elif s[3] < 0:
-#         if s[0] <= 0 and s[2] <= 0:
-#             reward = -s[0]
-#             s[3] = 10
-#         else:
-#             reward = 0.0
-#
-#     return reward, s
 
 
 def reward_fn(s):
@@ -85,7 +67,6 @@ for var in [2]:
         alg_config = {
             "env_name": env_name,
             "model": model,
-#            "transient_length" : int(num_steps/2),
             "act_var_schedule": [var],
             "seed": int(seed),  # int((time.time() % 1)*1e8),
             "total_steps": 2e6,
@@ -101,11 +82,11 @@ for var in [2]:
         }
 
 
-        #run_sg(alg_config, ppo, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
+        run_sg(alg_config, ppo_visit, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo, "ppo", "", "/data/rew_normal/" + trial_num + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo_visit, "ppo", " ", "/data/visit/" + trial_num  + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)

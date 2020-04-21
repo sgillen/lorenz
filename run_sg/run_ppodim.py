@@ -12,8 +12,7 @@ num_layers = 2
 activation = nn.ReLU
 
 from seagul.rl.run_utils import run_sg
-from ppo_dim import ppo
-from seagul.rl.ppo import PPOModel
+from seagul.rl.ppo import ppo_dim, PPOModel
 from seagul.nn import MLP
 from seagul.integration import euler
 import seagul.envs
@@ -106,7 +105,7 @@ for var in [2]:
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo, "ppo", "longer_trials and sweep over variance", "/data/dim/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo_dim, "ppo", "longer_trials and sweep over variance", "/data/dim/" + trial_num + "_" + str(var) + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)
