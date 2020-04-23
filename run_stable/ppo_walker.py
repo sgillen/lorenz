@@ -50,7 +50,7 @@ if __name__ == "__main__":
         
         p = Process(
             target=run_stable,
-            args=(int(2e6), "./data/walker2/" + trial_name + "_" + str(seed))
+            args=(int(1e7), "./data/walker2/" + trial_name + "_" + str(seed))
         )
         p.start()
         proc_list.append(p)
