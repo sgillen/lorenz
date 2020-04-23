@@ -6,18 +6,29 @@ from stable_baselines import PPO2
 import pybullet_envs
 from multiprocessing import Process
 from stable_baselines.common import make_vec_env
+import os
+from stable_baselines.bench import Monitor
 import time
 
 # Optional: PPO2 requires a vectorized environment to run
 # the env is now wrapped automatically when passing it to the constructor
 # env = DummyVecEnv([lambda: env])
 
+num_steps = int(1e4)
+base_dir = "./data/"
 trial_name = input("Trial name: ")
 
+trial_dir = base_dir + trial_name + "/"
+base_ok = input("run will be saved in " + trial_dir + " ok? y/n")
 
-def run_stable(num_steps, save_name):
+if base_ok == "n":
+    exit()
 
-    env = make_vec_env('Walker2DBulletEnv-v0', n_envs=4)
+
+def run_stable(num_steps, save_dir):
+
+    env = make_vec_env('Walker2DBulletEnv-v0', n_envs=4, monitor_dir=save_dir)
+
     model = PPO2(MlpPolicy,
                  env,
                  verbose=2,
@@ -37,7 +48,7 @@ def run_stable(num_steps, save_name):
 
 
     model.learn(total_timesteps=num_steps)
-    model.save(save_name)
+    model.save(save_dir + "/model.zip")
 
 if __name__ == "__main__":
     
@@ -47,10 +58,12 @@ if __name__ == "__main__":
     for seed in np.random.randint(0, 2 ** 32, 8):
         
         #    run_stable(int(8e4), "./data/walker/" + trial_name + "_" + str(seed))
-        
+
+        save_dir = trial_dir + "/" + str(seed)
+        os.makedirs(save_dir, exist_ok=False)
         p = Process(
             target=run_stable,
-            args=(int(1e7), "./data/walker2/" + trial_name + "_" + str(seed))
+            args=(num_steps,save_dir )
         )
         p.start()
         proc_list.append(p)
@@ -62,4 +75,5 @@ if __name__ == "__main__":
 
 
 
-    print(time.time() - start)
+    print(f"experiment complete, total time: {time.time() - start}, saved in {save_dir}")
+
