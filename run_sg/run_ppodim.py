@@ -85,6 +85,7 @@ for var in [2]:
         alg_config = {
             "env_name": env_name,
             "model": model,
+            "transient_length": 250,
             "transient_length" : int(num_steps/2),
             "act_var_schedule": [var],
             "seed": int(seed),  # int((time.time() % 1)*1e8),

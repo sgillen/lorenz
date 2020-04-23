@@ -71,7 +71,7 @@ for var in [2]:
             fixed_std=False
         )
 
-        num_steps = 500
+        num_steps = 100
         env_config = {
             "reward_fn": reward_fn,
             "xyz_max": float('inf'),

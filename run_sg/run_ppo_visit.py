@@ -53,7 +53,7 @@ for var in [2]:
             fixed_std=False
         )
 
-        num_steps = 500
+        num_steps = 100
         env_config = {
             "reward_fn": reward_fn,
             "xyz_max": float('inf'),
@@ -82,11 +82,11 @@ for var in [2]:
         }
 
 
-        run_sg(alg_config, ppo_visit, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
+#        run_sg(alg_config, ppo_visit, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo_visit, "ppo", " ", "/data/visit/" + trial_num  + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo_visit, "ppo", " visit with shorter episode", "/data/visit/" + trial_num  + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)
