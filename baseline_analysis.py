@@ -11,9 +11,10 @@ script_path = os.path.realpath(__file__).split("/")[:-1]
 script_path = "/".join(script_path) + "/"
 
 env_name = "Walker2DBulletEnv-v0"
+env = gym.make(env_name, render=True)
+
 
 def do_rollout_stable(init_point=None):
-    env = gym.make(env_name)
     model.observation_space = env.observation_space
     #td3_model = TD3.load(script_path + "../rl-baselines-zoo/baseline_log2/td3/su_acrobot_cdc-v0_2/su_acrobot_cdc-v0.zip")
 
@@ -57,47 +58,44 @@ def do_rollout_stable(init_point=None):
 
     return ep_obs1, ep_acts, ep_rews
 
+# %%
+fig, ax = plt.subplots(1,1)
 
-# fig, ax = plt.subplots(1,1)
+log_dir = script_path + './walker_log'
+# try:
+df_list = []
+min_length = float('inf')
 
-# color_iter = iter(['b', 'g', 'y', 'm', 'c'])
-# log_dir = script_path + './walker_log'
-# for algo in os.scandir(log_dir):
-#    # try:
-#         df_list = []
-#         min_length = float('inf')
+trial_path = "/home/sgillen/work/lorenz/run_stable/data/walker2"
+for entry in os.scandir(trial_path):
+    df = load_results(entry.path)
 
-#         for entry in os.scandir(algo.path):
-#             df = load_results(entry.path)
+    if len(df['r']) < min_length:
+        min_length = len(df['r'])
 
-#             if len(df['r']) < min_length:
-#                 min_length = len(df['r'])
+    df_list.append(df)
 
-#             df_list.append(df)
+min_length = int(min_length)
+rewards = np.zeros((min_length, len(df_list)))
 
-#         min_length = int(min_length)
-#         rewards = np.zeros((min_length, len(df_list)))
+for i, df in enumerate(df_list):
+    rewards[:, i] = np.array(df['r'][:min_length])
 
-#         for i, df in enumerate(df_list):
-#             rewards[:, i] = np.array(df['r'][:min_length])
+smooth_bounded_curve(rewards[:min_length], ax=ax)
+    #
+    # except:
+    #     print(algo.path, "did not work")
 
-#         print(print(algo.path), rewards[-1, :].mean(), rewards[-1, :].std())
-#         smooth_bounded_curve(rewards[:min_length], ax=ax, color=color_iter.__next__())
-#         print(algo.path)
-#     #
-#     # except:
-#     #     print(algo.path, "did not work")
+ax.grid()
+ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+#fig.savefig(script_path + '../figs/reward.png')
+plt.show()
 
-# ax.legend(['trpo', 'a2c', 'ppo2', 'td3'])
-# ax.grid()
-# ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
-# #fig.savefig(script_path + '../figs/reward.png')
-# plt.show()
-
+# %%
 from stable_baselines import PPO2 as ALGO
 
 #model = ALGO.load("/home/sgillen/work/third_party/rl-baselines-zoo/trained_agents/td3/Walker2DBulletEnv-v0.pkl")
-model = ALGO.load("/home/sgillen/work/lorenz/run_stable/walker0.zip")
+model = ALGO.load("/home/sgillen/work/lorenz/run_stable/data/walker0.zip")
 
 obs_hist, act_hist, rew_hist = do_rollout_stable()
 
