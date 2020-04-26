@@ -15,7 +15,7 @@ dtype = np.float32
 script_dir = os.path.dirname(__file__)
 
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/dim/fr_2"
-trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/dim_cmp"
+trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_rad/1"
 
 
 
@@ -25,7 +25,7 @@ max_size = 0
 for entry in os.scandir(trial_dir):
     model, env, args, ws = load_workspace(entry.path)
     plt.plot(ws["raw_rew_hist"])
-    plt.show(); plt.figure()
+    plt.show(block=False); plt.figure()
     if len(ws["raw_rew_hist"]) > max_size:
         max_size = len(ws["raw_rew_hist"])
 
@@ -33,7 +33,7 @@ for entry in os.scandir(trial_dir):
     ws_list.append(ws)
     model_list.append(model)
 
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 rewards = np.zeros((max_size, len(ws_list)))
 
 for i, ws in enumerate(ws_list):
@@ -44,7 +44,7 @@ for i, ws in enumerate(ws_list):
     rewards[:len(ws["raw_rew_hist"]), i] = np.array(ws["raw_rew_hist"])
 
 fig, ax = smooth_bounded_curve(rewards, window=100)
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 # %%
 
@@ -53,15 +53,15 @@ model = model_list[-1]
 
 plt.plot(ws['raw_rew_hist'], 'ko')
 plt.title('Return')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(ws['pol_loss_hist'], 'k')
 plt.title('Policy loss')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(ws['val_loss_hist'], 'k')
 plt.title('Value loss')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 # %%
 env = gym.make(ws['env_name'], **ws['env_config'])
@@ -106,25 +106,25 @@ obs_hist, action_hist, reward_hist, logp_hist = do_rollout(X0)
 plt.plot(np.clip(action_hist, -env.action_max, env.action_max))
 plt.title('Actions')
 plt.legend(['ux', 'uy'])
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(logp_hist)
 plt.title('Logp')
 plt.legend(['lgx', 'lqy'])
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(np.exp(logp_hist))
 plt.title('P')
 plt.legend(['lgx', 'lqy'])
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(obs_hist)
 plt.title('Observations')
 plt.legend(['x', 'y', 'z', 'r'])
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(reward_hist, 'k')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 # %%
 
@@ -137,7 +137,7 @@ fig = plt.figure(figsize=(16, 8))
 ax = fig.gca(projection='3d')
 ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 # %%
 
@@ -157,17 +157,19 @@ fig = plt.figure(figsize=(16, 8))
 ax = fig.gca(projection='3d')
 ax.plot(x, y, z, alpha=0.7, linewidth=1)
 ax.set_title('phase diagram')
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 
 plt.plot(x)
 plt.title("X")
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 plt.plot(y)
 plt.title("Y")
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
 plt.plot(z)
 plt.title("Z")
-plt.show(); plt.figure()
+plt.show(block=False); plt.figure()
+
+plt.show() 
 #
 # # %%
 #
