@@ -1,3 +1,4 @@
+# %% 
 import seagul.envs
 from seagul.rl.run_utils import load_workspace
 from seagul.plot import smooth_bounded_curve
@@ -15,9 +16,10 @@ dtype = np.float32
 script_dir = os.path.dirname(__file__)
 
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/dim/fr_2"
-trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_rad/1"
-
-
+#trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_rad/rad_clip" # 7/8
+#trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/dim_cmp" 5/8, 2/8 blew up, 1/8 fell into hole
+#trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/sched_lin" # need base conda
+trial_dir = "/home/sgillen/work/lorenz/run_sg/data_walker/0"
 
 ws_list = []
 model_list = []
@@ -25,7 +27,7 @@ max_size = 0
 for entry in os.scandir(trial_dir):
     model, env, args, ws = load_workspace(entry.path)
     plt.plot(ws["raw_rew_hist"])
-    plt.show(block=False); plt.figure()
+    plt.show(); plt.figure()
     if len(ws["raw_rew_hist"]) > max_size:
         max_size = len(ws["raw_rew_hist"])
 
@@ -33,7 +35,8 @@ for entry in os.scandir(trial_dir):
     ws_list.append(ws)
     model_list.append(model)
 
-plt.show(block=False); plt.figure()
+
+plt.show()
 rewards = np.zeros((max_size, len(ws_list)))
 
 for i, ws in enumerate(ws_list):
@@ -44,27 +47,28 @@ for i, ws in enumerate(ws_list):
     rewards[:len(ws["raw_rew_hist"]), i] = np.array(ws["raw_rew_hist"])
 
 fig, ax = smooth_bounded_curve(rewards, window=100)
-plt.show(block=False); plt.figure()
+plt.show
 
 # %%
 
-ws = ws_list[-1]
-model = model_list[-1]
+#ws = ws_list[-1]
+#model = model_list[-1]
 
 plt.plot(ws['raw_rew_hist'], 'ko')
 plt.title('Return')
-plt.show(block=False); plt.figure()
+plt.show() 
 
 plt.plot(ws['pol_loss_hist'], 'k')
 plt.title('Policy loss')
-plt.show(block=False); plt.figure()
+plt.show()
 
 plt.plot(ws['val_loss_hist'], 'k')
 plt.title('Value loss')
-plt.show(block=False); plt.figure()
+plt.show() 
 
 # %%
 env = gym.make(ws['env_name'], **ws['env_config'])
+env.num_steps = 1000
 
 def do_rollout(init_point):
     obs = env.reset(init_point)
@@ -98,33 +102,36 @@ def do_rollout(init_point):
 
 # %%
 # X0 = np.array([1, 1,.3])
-X0 = np.random.random(3)*10
+env.num_steps=100000
+for model in model_list:
+    X0 = np.random.random(3)*10
 
 
-obs_hist, action_hist, reward_hist, logp_hist = do_rollout(X0)
+    obs_hist, action_hist, reward_hist, logp_hist = do_rollout(X0)
+    """ 
+    plt.plot(np.clip(action_hist, -env.action_max, env.action_max))
+    plt.title('Actions')
+    plt.legend(['ux', 'uy'])
+    plt.show(block=False); plt.figure()
 
-plt.plot(np.clip(action_hist, -env.action_max, env.action_max))
-plt.title('Actions')
-plt.legend(['ux', 'uy'])
-plt.show(block=False); plt.figure()
+    plt.plot(logp_hist)
+    plt.title('Logp')
+    plt.legend(['lgx', 'lqy'])
+    plt.show(block=False); plt.figure()
 
-plt.plot(logp_hist)
-plt.title('Logp')
-plt.legend(['lgx', 'lqy'])
-plt.show(block=False); plt.figure()
+    plt.plot(np.exp(logp_hist))
+    plt.title('P')
+    plt.legend(['lgx', 'lqy'])
+    plt.show(block=False); plt.figure()
+    """
+    plt.plot(obs_hist)
+    plt.title('Observations')
+    plt.legend(['x', 'y', 'z', 'r'])
+    plt.show(block=False); plt.figure()
 
-plt.plot(np.exp(logp_hist))
-plt.title('P')
-plt.legend(['lgx', 'lqy'])
-plt.show(block=False); plt.figure()
-
-plt.plot(obs_hist)
-plt.title('Observations')
-plt.legend(['x', 'y', 'z', 'r'])
-plt.show(block=False); plt.figure()
-
-plt.plot(reward_hist, 'k')
-plt.show(block=False); plt.figure()
+    plt.plot(reward_hist, 'k')
+    plt.show(block=False); plt.figure()
+    print(sum(reward_hist))
 
 # %%
 
@@ -140,6 +147,7 @@ ax.set_title('phase diagram')
 plt.show(block=False); plt.figure()
 
 # %%
+
 
 env = gym.make(ws['env_name'], **ws['env_config'])
 num_steps = env.num_steps
@@ -170,7 +178,9 @@ plt.title("Z")
 plt.show(block=False); plt.figure()
 
 plt.show() 
-#
+
+
+
 # # %%
 #
 # seed_point = np.array(obs_hist[-1, :3])
@@ -418,3 +428,6 @@ plt.show()
 # plt.gca().xaxis.grid(True)  # minor grid on too
 # plt.gca().yaxis.grid(True)  # minor grid on too
 # plt.show(); plt.figure()
+
+
+# %%

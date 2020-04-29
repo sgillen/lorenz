@@ -27,14 +27,16 @@ trial_num = input("What trial is this?\n")
 def reward_fn(s):
     if s[3] > 0:
         if s[0] >= 0 and s[2] >= 0:
-            reward = np.clip(5 - np.abs(np.sqrt(s[0]**2 + s[2]**2)**2 - 5),1,5)
+            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2) - 5)**2,0,5)
             s[3] = -10
         else:
             reward = 0.0
 
     elif s[3] < 0:
         if s[0] <= 0 and s[2] <= 0:
-            reward = np.clip(5 - np.abs(np.sqrt(s[0]**2 + s[2]**2)**2 - 5),1,5)
+            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2)**2 - 5),0,5)
             s[3] = 10
         else:
             reward = 0.0
@@ -88,7 +90,7 @@ for var in [2]:
         #     else:
         #         return np.clip(sum(rews[-5:])/5*2, 50, 5000)
 
-        len_schedule = np.asarray([50, 500])
+        len_schedule = np.asarray([50, 1000])
         sched_length = len_schedule.shape[0]
         x_vals = np.linspace(0, 2e6, sched_length)
         len_lookup = lambda steps: np.interp(steps, x_vals, len_schedule)
