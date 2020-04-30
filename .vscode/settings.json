@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/sgillen/miniconda3/envs/ray/bin/python",
+    "python.pythonPath": "/home/sgillen/miniconda3/envs/stable/bin/python",
     "python.linting.pylintEnabled": false,
     "python.linting.enabled": false,
     "python.linting.flake8Enabled": true
