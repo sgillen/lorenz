@@ -1,3 +1,4 @@
+# %%
 from stable_baselines.results_plotter import load_results
 from seagul.plot import smooth_bounded_curve
 import numpy as np
@@ -8,7 +9,10 @@ from gym.wrappers import TimeLimit
 import pybullet_envs
 import time
 import torch
-from stable_baselines import TD3
+from stable_baselines import SAC, TD3, PPO2, A2C, TRPO
+import sys
+
+sys.path.append('/home/sgillen/work/third_party/rl-baselines-zoo/')
 #from stable_baselines import utils
 
 script_path = os.path.realpath(__file__).split("/")[:-1]
@@ -66,7 +70,7 @@ class TimeFeatureWrapper(gym.Wrapper):
 
 
 def do_rollout_debug(init_point=None):
-    env.seed(int(time.time()))
+    env.seed(int(time.time())*10)
         
     look_green = True
     look_red= True
@@ -144,12 +148,12 @@ def do_rollout_debug(init_point=None):
     ep_acts = torch.stack(acts_list)
     ep_rews = torch.stack(rews_list)
 
-    print(f"total_steps {total_steps}")
-    return ep_obs1, ep_acts, ep_rews, xyz_list
+    #print(f"total_steps {total_steps}")
+    return ep_obs1, ep_acts, ep_rews, total_steps
 
 
 color_iter = iter(['b', 'g', 'y', 'm', 'c'])
-log_dir = script_path + './data_r/'
+log_dir = script_path + './walker_r_log2/'
 legend_list = []
 
 fig, ax = plt.subplots(1,1)
@@ -182,9 +186,36 @@ ax.grid()
 ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
 plt.show()
 
-#model = SAC.load("/home/sgillen/work/lorenz/run_stable/data_r/sac/Walker2DBulletEnv-v0_1/best_model.zip")
-model = TD3.load("/home/sgillen/work/lorenz/run_stable/data_r/td3/Walker2DBulletEnv-v0_1/best_model.zip")
-render = True
-env = TimeFeatureWrapper(gym.make("Walker2DBulletEnv-v0", render=render))
 
-do_rollout_debug()
+
+#model = SAC.load("/home/sgillen/work/lorenz/run_stable/walker_r_log2/sac/Walker2DBulletEnv-v0_1/best_model.zip")
+render = False
+#env = TimeFeatureWrapper(gym.make("Walker2DBulletEnv-v0", render=render))
+env = gym.make("Walker2DBulletEnv-v0", render=render)
+
+
+env.num_steps=int(1e8)
+env._max_episode_steps = int(1e8)
+env._max_steps = int(1e8)
+
+
+algo_step_list = []
+algo_rew_list = []
+for trial in os.scandir("/home/sgillen/work/lorenz/run_stable/data2/zoo_td3_mon"):
+    model = TD3.load(trial.path + "/model.zip")
+    step_list = []
+    rew_list = []
+    for _ in range(10):
+        obs,acts,rews,steps = do_rollout_debug()
+        step_list.append(steps)
+        rew_list.append(sum(rews))
+        algo_step_list.append(steps)
+        algo_rew_list.append(sum(rews))
+        print(len(rews))
+    print("steps: ",  np.array(step_list).mean(), "+-", np.array(step_list).std() )
+    print("rews: ",  np.array(rew_list).mean(), "+-", np.array(rew_list).std() )
+
+print("total steps", np.array(algo_step_list).mean(), "+-", np.array(algo_step_list).std())
+print("total rews: ",  np.array(algo_rew_list).mean(), "+-", np.array(algo_rew_list).std())
+
+# %%
