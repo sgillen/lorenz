@@ -11,8 +11,8 @@ import seagul.envs
 #from seagul.integrationx import euler
 
 proc_list = []
-trial_num = input("What trial is this?\n")
-
+#trial_num = input("What trial is this?\n")
+trial_num = "0"
 #env_name = "Walker2DBulletEnv-v0"
 env_name = "Walker2d-v2"
 
@@ -26,7 +26,7 @@ num_layers = 2
 activation = nn.ReLU
 
 
-for seed in np.random.randint(0, 2 ** 32, 8):
+for seed in np.random.randint(0, 2 ** 32, 1):
     
     model = SACModel(
         policy = MLP(input_size, output_size * 2, num_layers, layer_size, activation),
@@ -40,27 +40,27 @@ for seed in np.random.randint(0, 2 ** 32, 8):
         "env_name": env_name,
         "model": model,
         "seed": int(seed),  # int((time.time() % 1)*1e8),
-        "total_steps" : 1e6,
-        "alpha" : .2,
-        "exploration_steps" : 5000,
-        "min_steps_per_update" : 500,
+        "total_steps" : 2e3,
+        "alpha" : .01,
+        "exploration_steps" : 0,
+        "min_steps_per_update" : 1,
         "env_steps" : env._max_episode_steps,
         "gamma": 1,
-        "sgd_batch_size": 64,
+        "sgd_batch_size": 256,
         "replay_batch_size" : 256,
-        "iters_per_update": 4,
+        "iters_per_update": float('inf'),
         #"iters_per_update": float('inf'),
     }
 
-    # run_sg(alg_config, sac, "sac bullet defaults", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
+    run_sg(alg_config, sac, "sac bullet defaults", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
-    p = Process(
-        target=run_sg,
-        args=(alg_config, sac, "", "same params as invertedPendulum", "/data_walker/mj" + trial_num + "/" + "seed" + str(seed)),
-    )
-    p.start()
-    proc_list.append(p)
-
-for p in proc_list:
-    print("joining")
-    p.join()
+#     p = Process(
+#         target=run_sg,
+#         args=(alg_config, sac, "", "same params as invertedPendulum", "/data_walker/mj" + trial_num + "/" + "seed" + str(seed)),
+#     )
+#     p.start()
+#     proc_list.append(p)
+#
+# for p in proc_list:
+#     print("joining")
+#     p.join()
