@@ -20,7 +20,7 @@ script_dir = os.path.dirname(__file__)
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/dim_cmp" 5/8, 2/8 blew up, 1/8 fell into hole
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/sched_lin" # need base conda
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data_walker/0"
-trial_dir = "/home/sgillen/work/lorenz./data/mj_pend/2"
+trial_dir = "/home/sgillen/work/lorenz/run_sg/data/3/"
 
 
 ws_list = []

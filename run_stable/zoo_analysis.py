@@ -153,7 +153,7 @@ def do_rollout_debug(init_point=None):
 
 
 color_iter = iter(['b', 'g', 'y', 'm', 'c'])
-log_dir = script_path + './walker_r_log2/'
+log_dir = script_path + './data_r/walker_r_log2'
 legend_list = []
 
 fig, ax = plt.subplots(1,1)

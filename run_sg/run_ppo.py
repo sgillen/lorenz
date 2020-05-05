@@ -19,7 +19,6 @@ import seagul.envs
 
 #from seagul.integrationx import euler
 
-
 proc_list = []
 trial_num = input("What trial is this?\n")
 

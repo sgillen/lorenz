@@ -21,7 +21,8 @@ script_dir = os.path.dirname(__file__)
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_normal/sched_lin" # need base conda
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data_walker/0"
 #trial_dir = "/home/sgillen/work/lorenz./data/mj_pend//steps_r"
-trial_dir = "/home/sgillen/work/lorenz/data_walker/mjpend/"
+#trial_dir = "/home/sgillen/work/lorenz/data_walker/mjpend/"
+trial_dir = "/home/sgillen/work/lorenz/run_sg/data/sac/6"
 
 ws_list = []
 model_list = []
@@ -38,7 +39,7 @@ for entry in os.scandir(trial_dir):
     model_list.append(model)
 
 
-plt.show()
+plt.show(); plt.figure()
 rewards = np.zeros((max_size, len(ws_list)))
 
 for i, ws in enumerate(ws_list):
@@ -49,7 +50,7 @@ for i, ws in enumerate(ws_list):
     rewards[:len(ws["raw_rew_hist"]), i] = np.array(ws["raw_rew_hist"])
 
 fig, ax = smooth_bounded_curve(rewards, window=100)
-plt.show
+plt.show()
 
 # %%
 
@@ -104,7 +105,7 @@ def do_rollout(init_point):
 
 # %%
 # X0 = np.array([1, 1,.3])
-env.num_steps=100000
+env.num_steps=50000
 for model in model_list:
     X0 = np.random.random(3)*10
 
