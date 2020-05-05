@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import gym
 from seagul.rl.run_utils import run_sg
-from seagul.rl.sac import sac, SACModel
+from seagul.rl.ppo import ppo, PPOModel
 from seagul.nn import MLP
 from seagul.integration import euler
 import seagul.envs
@@ -12,6 +12,7 @@ import seagul.envs
 
 proc_list = []
 trial_num = input("What trial is this?\n")
+
 #env_name = "Walker2DBulletEnv-v0"
 env_name = "Walker2d-v2"
 
@@ -27,34 +28,34 @@ activation = nn.ReLU
 
 for seed in np.random.randint(0, 2 ** 32, 8):
     
-    model = SACModel(
+    model = PPOModel(
         policy = MLP(input_size, output_size * 2, num_layers, layer_size, activation),
         value_fn = MLP(input_size, 1, num_layers, layer_size, activation),
-        q1_fn = MLP(input_size+output_size, 1, num_layers, layer_size, activation),
-        q2_fn = MLP(input_size+output_size, 1, num_layers, layer_size, activation),
-        act_limit=1
+        fixed_std=False,
     )
 
+    
     alg_config = {
         "env_name": env_name,
         "model": model,
         "seed": int(seed),  # int((time.time() % 1)*1e8),
-        "total_steps" : 1e6,
-        "alpha" : .01,
-        "exploration_steps" : 1000,
-        "min_steps_per_update" : 1,
-        "env_steps" : env._max_episode_steps,
-        "gamma": 1,
-        "sgd_batch_size": 256,
-        "replay_batch_size" : 256,
-        "iters_per_update": float('inf'),
+        "total_steps": 2e6,
+        "epoch_batch_size": 1024,
+        "pol_batch_size": 64,
+        "val_batch_size": 64,
+        "lam": .95,
+        "gamma": .95,
+        "normalize_return": True,
+        "pol_epochs" : 50,
+        "val_epochs" : 30,
     }
 
-    #run_sg(alg_config, sac, run_desc="sac bullet defaults", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
+
+    # run_sg(alg_config, sac, "sac bullet defaults", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
     p = Process(
         target=run_sg,
-        args=(alg_config, sac,  f"/data_walker/mj{trial_num}/{str(seed)}", "same params as invertedPendulum",""),
+        args=(alg_config, ppo, "sac bullet defaults", "", "/data_walker/mj" + trial_num + "/" + "seed" + str(seed)),
     )
     p.start()
     proc_list.append(p)
