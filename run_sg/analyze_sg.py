@@ -105,7 +105,7 @@ def do_rollout(init_point):
 
 # %%
 # X0 = np.array([1, 1,.3])
-env.num_steps=50000
+env.num_steps=100000
 for model in model_list:
     X0 = np.random.random(3)*10
 

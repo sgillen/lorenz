@@ -43,8 +43,6 @@ def do_rollout_stable(init_point=None):
     done = False
     cur_step = 0
 
-#    import ipdb; ipdb.set_trace()
-
     while not done:
         acts = model.predict(obs)[0]
 
@@ -101,7 +99,6 @@ def do_rollout_debug(init_point=None):
 
     total_steps = 0
 
-#    import ipdb; ipdb.set_trace()
 
     while not done:
         acts = model.predict(obs)[0]
@@ -140,7 +137,7 @@ def do_rollout_debug(init_point=None):
 
         acts_list.append(torch.as_tensor(acts))
         rews_list.append(torch.as_tensor(rew, dtype=dtype))
-        contact_list.append(env.unwrapped.robot.feet_contact)
+        contact_list.append(env.unwrapped.robot.feet_contact.copy())
         cur_step += 1
 
 
@@ -148,8 +145,8 @@ def do_rollout_debug(init_point=None):
     ep_acts = torch.stack(acts_list)
     ep_rews = torch.stack(rews_list)
 
-    print(f"total_steps {total_steps}")
-    return ep_obs1, ep_acts, ep_rews, xyz_list
+    # print(f"total_steps {total_steps}")
+    return ep_obs1, ep_acts, ep_rews, xyz_list, contact_list, total_steps
 
 
 fig, ax = plt.subplots(1,1)
@@ -158,11 +155,13 @@ log_dir = script_path + './walker_log'
 # try:
 df_list = []
 model_list = []
+seed_list = []
 min_length = float('inf')
 
 trial_path = "/home/sgillen/work/lorenz/run_stable/data2/zoo_td3_mon"
 for entry in os.scandir(trial_path):
     df = load_results(entry.path)
+    seed_list.append(entry.path.split("/")[-1])
 
 
     if len(df['r']) < min_length:
@@ -204,26 +203,24 @@ env.num_steps = 1000
 
 #model = ALGO.load("/home/sgillen/work/third_party/rl-baselines-zoo/trained_agents/td3/Walker2DBulletEnv-v0.pkl")
 #model = model_list[2]
-for model in model_list:
-    #df = df_list[2]
 
-    #plt.plot(df['r']); plt.show()
+from scipy.io import savemat
+trial = 0 
+#for model, seed in zip(model_list, seed_list):
+for model, seed in zip([model_list[4]], [seed_list[4]]):
+    for trial in range(10):
+        env._max_episode_steps = 100000
+        obs_hist, act_hist, rew_hist, xyz_hist, contact_list, total_steps = do_rollout_debug()
+        print(f"{seed}: {total_steps}")
 
-    env._max_episode_steps = 100000
-    obs_hist, act_hist, rew_hist, xyz_hist = do_rollout_debug()
+        savemat(f"/home/sgillen/work/lorenz/run_stable/data_katie/agent-{seed}/ic-{trial}.mat", {"obs_hist":np.array(obs_hist),"act_hist":np.array(act_hist),"xyz_hist":xyz_hist,"contact_list":contact_list, "total_steps":total_steps})
 
-    print(f"reward sum: {sum(rew_hist)}, reward len: {len(rew_hist)}")
+        print(f"reward sum: {sum(rew_hist)}, reward len: {len(rew_hist)}")
+    
+        #t = np.array([i*.01 for i in range(obs_hist.shape[0])])
 
-    # t = np.array([i*2 for i in range(act_hist.shape[0])])
-    # plt.step(t, act_hist, 'k')
-    # plt.title('Actions')
-    # plt.xlabel('Time (seconds)')
-    # plt.ylabel('Torque (Nm)')
-    # plt.grid()
-    # #plt.savefig(script_path + '../figs/act_hist.png')
-    # plt.show(); plt.figure()
 
-    t = np.array([i*.01 for i in range(obs_hist.shape[0])])
+
     #plt.plot(t, xyz_hist)
 
     #plt.axhline(np.pi/2, -1, 11,color='k',  linestyle='dashed', alpha=.5)
@@ -237,4 +234,14 @@ for model in model_list:
     #plt.savefig(script_path + '../figs/obs_hist.png')
     #plt.show()
  
- 
+     # t = np.array([i*2 for i in range(act_hist.shape[0])])
+    # plt.step(t, act_hist, 'k')
+    # plt.title('Actions')
+    # plt.xlabel('Time (seconds)')
+    # plt.ylabel('Torque (Nm)')
+    # plt.grid()
+    # #plt.savefig(script_path + '../figs/act_hist.png')
+    # plt.show(); plt.figure()
+
+
+# %%
