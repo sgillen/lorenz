@@ -7,7 +7,7 @@ from multiprocessing import Process
 proc_list = []
 for seed in np.random.randint(0,2**16,8):
     arg_dict = {
-        'env' : 'Walker2d-v3',
+        'env' : 'Walker2d-v2',
         'alg' : 'ppo2',
         'num_timesteps' : '2e6',
         'seed' : str(seed),
@@ -15,7 +15,7 @@ for seed in np.random.randint(0,2**16,8):
 
     p = Process(
         target=run_and_save_bs,
-        args=(arg_dict, "many" + str(seed), "many seeds, default params", "/data/"),
+        args=(arg_dict, "many" + str(seed), "many seeds, default params", "/data_bs/"),
     )
 
     p.start()
