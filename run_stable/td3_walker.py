@@ -7,13 +7,14 @@ from stable_baselines.ddpg.noise import NormalActionNoise, OrnsteinUhlenbeckActi
 import pybullet_envs
 import time
 import os
+from stable_baselines.common import make_vec_env
 from multiprocessing import Process
 
 
 num_steps = int(2e6)
 
 
-base_dir = "./data/bullet/"
+base_dir = "./data/mj15/"
 trial_name = input("Trial name: ")
 
 trial_dir = base_dir + trial_name + "/"
@@ -25,8 +26,7 @@ if base_ok == "n":
 
 def run_stable(num_steps, save_dir):
 
-    
-    env = gym.make('Walker2DBulletEnv-v0')
+    env = make_vec_env('Walker2d-v2', n_envs=4, monitor_dir=save_dir)
     n_actions = env.action_space.shape[-1]
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
     
@@ -41,7 +41,8 @@ def run_stable(num_steps, save_dir):
                 learning_rate= 1e-3,
                 train_freq= 1000,
                 gradient_steps= 1000,
-                policy_kwargs={"layers":[400, 300]}
+                policy_kwargs={"layers":[400, 300]},
+                n_cpu_tf_sess=1,
     )
 
     model.learn(total_timesteps=num_steps)

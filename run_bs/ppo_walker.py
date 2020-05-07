@@ -4,6 +4,8 @@ from seagul.rl.run_utils import run_and_save_bs
 import numpy as np
 from multiprocessing import Process
 
+trial_name = input("trial name:")
+
 proc_list = []
 for seed in np.random.randint(0,2**16,8):
     arg_dict = {
@@ -15,7 +17,7 @@ for seed in np.random.randint(0,2**16,8):
 
     p = Process(
         target=run_and_save_bs,
-        args=(arg_dict, "many" + str(seed), "many seeds, default params", "/data_bs/"),
+        args=(arg_dict, "15_" + str(seed), "many seeds, default params", f"/data_bs/{trial_name}/"),
     )
 
     p.start()
