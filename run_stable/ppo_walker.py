@@ -15,7 +15,7 @@ import time
 # env = DummyVecEnv([lambda: env])
 
 num_steps = int(2e6)
-base_dir = "./data/mj15/"
+base_dir = "./data/bf/"
 trial_name = input("Trial name: ")
 
 trial_dir = base_dir + trial_name + "/"
@@ -26,7 +26,7 @@ if base_ok == "n":
 
 
 def run_stable(num_steps, save_dir):
-    env = make_vec_env('Walker2d-v2', n_envs=4, monitor_dir=save_dir)
+    env = make_vec_env('Walker2DBulletEnv-v0', n_envs=4, monitor_dir=save_dir)
     model = PPO2(MlpPolicy,
                  env,
                  verbose=2,
