@@ -11,7 +11,7 @@ from stable_baselines.common import make_vec_env
 from multiprocessing import Process
 
 
-num_steps = int(2e6)
+num_steps = int(1e6)
 
 
 base_dir = "./data/mj15/"
@@ -26,7 +26,7 @@ if base_ok == "n":
 
 def run_stable(num_steps, save_dir):
 
-    env = make_vec_env('Walker2d-v2', n_envs=4, monitor_dir=save_dir)
+    env = make_vec_env('Walker2d-v2', n_envs=1, monitor_dir=save_dir)
     n_actions = env.action_space.shape[-1]
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
     
