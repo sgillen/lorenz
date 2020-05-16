@@ -9,6 +9,7 @@ from stable_baselines.common import make_vec_env
 import os
 from stable_baselines.bench import Monitor
 import time
+import seagul.envs
 
 # Optional: PPO2 requires a vectorized environment to run
 # the env is now wrapped automatically when passing it to the constructor
@@ -26,7 +27,7 @@ if base_ok == "n":
 
 
 def run_stable(num_steps, save_dir):
-    env = make_vec_env('Walker2d-v2', n_envs=4, monitor_dir=save_dir)
+    env = make_vec_env('pbmj_walker2d-v0', n_envs=4, monitor_dir=save_dir)
     model = PPO2(MlpPolicy,
                  env,
                  verbose=2,
