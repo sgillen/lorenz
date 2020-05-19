@@ -9,14 +9,15 @@ from stable_baselines.common import make_vec_env
 import os
 from stable_baselines.bench import Monitor
 import time
-import seagul.envs
+import seagul.envs.bullet
+
 
 # Optional: PPO2 requires a vectorized environment to run
 # the env is now wrapped automatically when passing it to the constructor
 # env = DummyVecEnv([lambda: env])
 
 num_steps = int(2e6)
-base_dir = "./data/mj20/"
+base_dir = "./data/pbmj/0"
 trial_name = input("Trial name: ")
 
 trial_dir = base_dir + trial_name + "/"
@@ -27,7 +28,48 @@ if base_ok == "n":
 
 
 def run_stable(num_steps, save_dir):
-    env = make_vec_env('pbmj_walker2d-v0', n_envs=4, monitor_dir=save_dir)
+    physics_params = {
+        'fixedTimeStep': 0.002,
+        'numSubSteps': 1,
+        'numSolverIterations': 50,
+        'useSplitImpulse': 1,
+        'splitImpulsePenetrationThreshold': -0.03999999910593033,
+        'contactBreakingThreshold': 0.02,
+        'collisionFilterMode': 1,
+        'enableFileCaching': 1,
+        'restitutionVelocityThreshold': 0.20000000298023224,
+        'erp': 0.0,
+        'frictionERP': 0.0,
+        'contactERP': 0.0,
+        'globalCFM': 0.0,
+        'enableConeFriction': 0,
+        'deterministicOverlappingPairs': 1,
+        'allowedCcdPenetration': 0.04,
+        'jointFeedbackMode': 0,
+        'solverResidualThreshold': 1e-07,
+        'contactSlop': 1e-05,
+        'enableSAT': 0,
+        'constraintSolverType': 0,
+        'reportSolverAnalytics': 1,
+    }
+
+    dynamics_params = {
+        'lateralFriction': 0.9,
+        'restitution': 0.0,
+        'rollingFriction': 0.0,
+        'spinningFriction': 0.0,
+        'contactDamping': -1.0,
+        'contactStiffness': -1.0,
+        'collisionMargin': 0.0,
+        'angularDamping': 0.0,
+        'linearDamping': 0.0,
+        'jointDamping': .1,
+    }
+
+    env_config = {"physics_params":physics_params,
+                  "dynamics_params":dynamics_params}
+
+    env = make_vec_env(seagul.envs.bullet.PBMJWalker2dEnv, n_envs=4, monitor_dir="./tmp/", env_kwargs=env_config)
     model = PPO2(MlpPolicy,
                  env,
                  verbose=2,
@@ -71,7 +113,6 @@ if __name__ == "__main__":
     for p in proc_list:
         print("joining")
         p.join()
-
 
 
     print(f"experiment complete, total time: {time.time() - start}, saved in {save_dir}")
