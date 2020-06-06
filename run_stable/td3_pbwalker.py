@@ -12,64 +12,12 @@ from multiprocessing import Process
 import seagul.envs.bullet
 import json
 import pybulletgym
-
+import pybulletgym.envs.mujoco.envs.locomotion.walker2d_env
 
 num_steps = int(1e6)
-    
-physics_params = {
-    'fixedTimeStep': 0.002,
-    'numSubSteps': 0,
-    'numSolverIterations': 50,
-    'useSplitImpulse': 1,
-    'splitImpulsePenetrationThreshold': -0.03999999910593033,
-    'contactBreakingThreshold': 0.02,
-    'collisionFilterMode': 1,
-    'enableFileCaching': 1,
-    'restitutionVelocityThreshold': 0.20000000298023224,
-    'erp': 0.0,
-    'frictionERP': 0.0,
-    'contactERP': 0.0,
-    'globalCFM': 0.0,
-    'enableConeFriction': 0,
-    'deterministicOverlappingPairs': 1,
-    'allowedCcdPenetration': 0.04,
-    'jointFeedbackMode': 0,
-    'solverResidualThreshold': 1e-07,
-    'contactSlop': 1e-05,
-    'enableSAT': 0,
-    'constraintSolverType': 0,
-    'reportSolverAnalytics': 1,
-}
-
-dynamics_params = {
-    'lateralFriction': 0.7,
-    'restitution': 0.0,
-    'restitution': 0.0,
-    'rollingFriction': 0.1,
-    'spinningFriction': 0.1,
-    'contactDamping': -1,
-    'contactStiffness': -1,
-    'contactDamping': 2e3,
-    'contactStiffness': 6e5,
-    #    'contactDamping': 948.95018837,
-    #    'contactStiffness': 23201.60208068,
-    'contactDamping': -1,
-    'contactStiffness': -1,
-    'collisionMargin': 0.0,
-    'angularDamping': 0.0,
-    'linearDamping': 0.0,
-    'jointDamping': .1,
-}
-
-torque_limits = (100,100,100,100,100,100)
-
-env_config = {"physics_params":physics_params,
-              "dynamics_params":dynamics_params,
-              "torque_limits"  :torque_limits
-}
 
 
-base_dir = "./data_pbmj/td3_fc/"
+base_dir = "./data_pbg/td3_default/"
 trial_name = input("Trial name: ")
 
 trial_dir = base_dir + trial_name + "/"
@@ -79,9 +27,12 @@ if base_ok == "n":
     exit()
 
 
+env_config={}
+
 def run_stable(num_steps, save_dir):
 
-    env = make_vec_env(seagul.envs.bullet.PBMJWalker2dFCEnv, n_envs=1, monitor_dir=save_dir, env_kwargs=env_config)
+    env = gym.wrappers.TimeLimit(pybulletgym.envs.mujoco.envs.locomotion.walker2d_env.Walker2DMuJoCoEnv,1000)
+    env = make_vec_env(env, n_envs=1, monitor_dir=save_dir, env_kwargs=env_config)
     n_actions = env.action_space.shape[-1]
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 

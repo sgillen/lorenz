@@ -11,9 +11,11 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import os
 import itertools
+import torch
+import dill
 
 dtype = np.float32
-script_dir = os.path.dirname(__file__)
+#script_dir = os.path.dirname(__file__)
 
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/dim/fr_2"
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data/rew_rad/rad_clip" # 7/8
@@ -22,13 +24,16 @@ script_dir = os.path.dirname(__file__)
 #trial_dir = "/home/sgillen/work/lorenz/run_sg/data_walker/0"
 #trial_dir = "/home/sgillen/work/lorenz./data/mj_pend//steps_r"
 #trial_dir = "/home/sgillen/work/lorenz/data_walker/mjpend/"
-trial_dir = "/home/sgillen/work/lorenz/run_sg/data/sac/6"
+#trial_dir = "/home/sgillen/work/lorenz/run_sg/data/sac/6"
+trial_dir = "/home/sgillen/work/seagul/seagul/tests/todo/tmp/"
 
 ws_list = []
 model_list = []
 max_size = 0
 for entry in os.scandir(trial_dir):
-    model, env, args, ws = load_workspace(entry.path)
+    ws = torch.load(entry.path, pickle_module=dill)
+    model = ws['model']
+    # model, env, args, ws = load_workspace(entry.path)
     plt.plot(ws["raw_rew_hist"])
     plt.show(); plt.figure()
     if len(ws["raw_rew_hist"]) > max_size:
@@ -105,7 +110,7 @@ def do_rollout(init_point):
 
 # %%
 # X0 = np.array([1, 1,.3])
-env.num_steps=100000
+env.num_steps=100
 for model in model_list:
     X0 = np.random.random(3)*10
 

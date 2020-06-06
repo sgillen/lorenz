@@ -6,24 +6,20 @@ from seagul.plot import smooth_bounded_curve
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from stable_baselines import TD3 as ALGO
+from stable_baselines import PPO2 as ALGO
 import time
+import seagul.envs
 import pybullet_envs
 
-script_path = os.path.realpath(__file__).split("/")[:-1]
-script_path = "/".join(script_path) + "/"
+#script_path = os.path.realpath(__file__).split("/")[:-1]
+#script_path = "/".join(script_path) + "/"
 
-env_name = "Walker2DBulletEnv-v0"
-render = False
-env = gym.make(env_name, render=render)
+env_name = "linear_z-v0"
+env = gym.make(env_name)
 
 
 def do_rollout_stable(init_point=None):
     env.seed(int(time.time()))
-    
-    jd = env.unwrapped.robot.jdict
-    
-    
 
     if init_point is not None:
         obs = env.reset(init_point)
@@ -47,14 +43,10 @@ def do_rollout_stable(init_point=None):
         acts = model.predict(obs)[0]
 
         obs, rew, done, out = env.step(acts)
-        if (render):
-            env.env.camera_adjust()
-            time.sleep(.02)
 
         # env.render()
         obs1_list.append(obs)
         obs = torch.as_tensor(obs, dtype=dtype)
-        xyz_list.append(env.env.robot.body_xyz)
 
         acts_list.append(torch.as_tensor(acts))
         rews_list.append(torch.as_tensor(rew, dtype=dtype))
@@ -64,101 +56,19 @@ def do_rollout_stable(init_point=None):
     ep_acts = torch.stack(acts_list)
     ep_rews = torch.stack(rews_list)
 
-    return ep_obs1, ep_acts, ep_rews, xyz_list
-
-
-def do_rollout_debug(init_point=None):
-    env.seed(int(time.time()))
-        
-    look_green = True
-    look_red= True
-    
-    if init_point is not None:
-        obs = env.reset(init_point)
-    else:
-        obs = env.reset()
-
-    green_thigh_joint = env.unwrapped.robot.jdict["thigh_joint"]
-    red_thigh_joint = env.unwrapped.robot.jdict["thigh_left_joint"]
-    
-    
-    obs = torch.as_tensor(obs, dtype=torch.float32)
-
-    acts_list = []
-    obs1_list = []
-    rews_list = []
-    xyz_list = []
-    contact_list = []
-    step_list = []
-    dtype = torch.float32
-    act_size = env.action_space.shape[0]
-    obs_size = env.observation_space.shape[0]
-
-    done = False
-    cur_step = 0
-
-    total_steps = 0
-
-
-    while not done:
-        acts = model.predict(obs)[0]
-        green_foot_contact = env.unwrapped.robot.feet_contact[0]
-        red_foot_contact = env.unwrapped.robot.feet_contact[1]
-       
-        obs, rew, done, out = env.step(acts)
-        if (render):
-            env.env.camera_adjust()
-            print(f"foot_contact: {red_foot_contact}")
-            print(f"f0 contact list: {len (env.unwrapped.robot.feet[0].contact_list())}")
-            print(f"f1 contact list: {len (env.unwrapped.robot.feet[1].contact_list())}")
-            time.sleep(.02)
-
-
-        if look_green:
-            if green_thigh_joint.get_position() > 0 and green_foot_contact:
-                total_steps += 1
-                #print("step taken, green foot down")
-                look_green = False
-                look_red = True
-
-
-        if look_red:
-            if red_thigh_joint.get_position() > 0 and red_foot_contact:
-                total_steps += 1
-                #print("step taken, red foot down")
-                look_green = True
-                look_red = False
-
-
-        # env.render()
-        obs1_list.append(obs)
-        obs = torch.as_tensor(obs, dtype=dtype)
-        xyz_list.append(env.env.robot.body_xyz)
-
-        acts_list.append(torch.as_tensor(acts))
-        rews_list.append(torch.as_tensor(rew, dtype=dtype))
-        contact_list.append(env.unwrapped.robot.feet_contact.copy())
-        cur_step += 1
-
-
-    ep_obs1 = torch.tensor(obs1_list)
-    ep_acts = torch.stack(acts_list)
-    ep_rews = torch.stack(rews_list)
-
-    # print(f"total_steps {total_steps}")
-    return ep_obs1, ep_acts, ep_rews, xyz_list, contact_list, total_steps
+    return ep_obs1, ep_acts, ep_rews
 
 
 fig, ax = plt.subplots(1,1)
 
-log_dir = script_path + './walker_log'
+#log_dir = script_path + './walker_log'
 # try:
 df_list = []
 model_list = []
 seed_list = []
 min_length = float('inf')
 
-trial_path = "/home/sgillen/work/lorenz/run_stable/data2/zoo_td3_mon"
+trial_path = "/home/sgillen/work/lorenz/run_stable/data/linear_z/ppo/ppo_cmp2"
 for entry in os.scandir(trial_path):
     df = load_results(entry.path)
     seed_list.append(entry.path.split("/")[-1])
@@ -176,28 +86,62 @@ rewards = np.zeros((min_length, len(df_list)))
 for i, df in enumerate(df_list):
    rewards[:, i] = np.array(df['r'][:min_length])
 
-#smooth_bounded_curve(rewards[:min_length], ax=ax)
-
-
-ax.grid()
-ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
-#fig.savefig(script_path + '../figs/reward.png')
+smooth_bounded_curve(rewards)
 plt.show()
+#
+#
+# ax.grid()
+# ax.ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+# #fig.savefig(script_path + '../figs/reward.png')
+# plt.show()
 
 
 # %%
+def reward_fn(s):
+    if s[3] > 0:
+        if s[0] >= 0 and s[2] >= 0:
+            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2) - 5)**2,0,5)
+            s[3] = -10
+        else:
+            reward = 0.0
+
+    elif s[3] < 0:
+        if s[0] <= 0 and s[2] <= 0:
+            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2)**2 - 5),0,5)
+            s[3] = 10
+        else:
+            reward = 0.0
+
+    return reward, s
+
+from seagul.integration import euler
+
+env_steps = 500
+env_config = {
+    "reward_fn": reward_fn,
+    "xyz_max": float('inf'),
+    "num_steps": env_steps,
+    "act_hold": 10,
+    "integrator": euler,
+    "dt": .01,
+    "init_noise_max": 10,
+}
 
 render=False
-model = model_list[-1]
+model = model_list[0]
 
 try:
-    env = gym.make("Walker2DBulletEnv-v0", render=render)
+    env = gym.make(env_name, **env_config)
 except error:
     pass
 
 env.num_steps = 1000
 
-#do_rollout_debug()
+ep_obs1, ep_acts, ep_rews = do_rollout_stable()
+
+plt.plot(ep_obs1); plt.show()
 
 # %%
 

@@ -55,7 +55,7 @@ def run_stable(num_steps, save_dir):
 
     dynamics_params = {
         'lateralFriction': 0.9,
-        'restitution': 0.0,
+        'restitution': 0.5,
         'rollingFriction': 0.0,
         'spinningFriction': 0.0,
         'contactDamping': -1.0,
