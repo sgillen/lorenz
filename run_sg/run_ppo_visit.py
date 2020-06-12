@@ -64,29 +64,26 @@ for var in [2]:
             "init_noise_max": 10,
         }
 
+
         alg_config = {
             "env_name": env_name,
             "model": model,
-            "act_var_schedule": [var],
             "seed": int(seed),  # int((time.time() % 1)*1e8),
             "total_steps": 2e6,
             "epoch_batch_size": 1024,
-            "pol_batch_size": 512,
-            "val_batch_size": 1024,
+            "sgd_batch_size": 512,
             "lam": .2,
             "gamma": .95,
-            "normalize_return": False,
+            "normalize_return": True,
             "env_config": env_config,
-            "pol_epochs" : 50,
-            "val_epochs" : 30,
+            "sgd_epochs" : 50,
         }
-
 
 #        run_sg(alg_config, ppo_visit, "ppo", "debug", "/data/" + trial_num + "/" + "seed" + str(seed))
 
         p = Process(
             target=run_sg,
-            args=(alg_config, ppo_visit, "ppo", " visit with shorter episode", "/data/visit/" + trial_num  + "/" + "seed" + str(seed)),
+            args=(alg_config, ppo_visit, "ppo", " visit with shorter episode", "/data22/visit/" + trial_num  + "/" + "seed" + str(seed)),
         )
         p.start()
         proc_list.append(p)
