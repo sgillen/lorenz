@@ -63,3 +63,5 @@ for i, (label, method) in enumerate(methods.items()):
 plt.show()
 
 # %%
+
+
