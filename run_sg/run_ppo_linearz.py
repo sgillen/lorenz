@@ -27,7 +27,8 @@ trial_num = input("What trial is this?\n")
 def reward_fn(s):
     if s[3] > 0:
         if s[0] >= 0 and s[2] >= 0:
-            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            reward = 5.0
             #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2) - 5)**2,0,5)
             s[3] = -10
         else:
@@ -35,8 +36,9 @@ def reward_fn(s):
 
     elif s[3] < 0:
         if s[0] <= 0 and s[2] <= 0:
-            reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
+            #reward = np.clip(np.sqrt(s[0]**2 + s[2]**2),0,10)
             #reward = 5 - np.clip(np.abs(np.sqrt(s[0]**2 + s[2]**2)**2 - 5),0,5)
+            reward = 5.0
             s[3] = 10
         else:
             reward = 0.0
@@ -112,7 +114,7 @@ for seed in np.random.randint(0, 2 ** 32, 8):
 
     p = Process(
         target=run_sg,
-        args=(alg_config, ppo, "ppo", "", "/data2/3d_hole/" + trial_num + "/" + "seed" + str(seed)),
+        args=(alg_config, ppo, "ppo", "", "/data22/vanilla/" + trial_num + "/" + "seed" + str(seed)),
     )
     p.start()
     proc_list.append(p)

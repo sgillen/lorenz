@@ -1,6 +1,13 @@
 from multiprocessing import Process
 import torch.nn as nn
 import numpy as np
+from seagul.rl.run_utils import run_sg
+from seagul.rl.ppo import ppo_dim, PPOModel
+from seagul.nn import MLP
+from seagul.integration import euler
+import seagul.envs
+
+
 # init policy, value fn
 
 env_name = "linear_z2d-v0"
@@ -11,11 +18,6 @@ layer_size = 64
 num_layers = 2
 activation = nn.ReLU
 
-from seagul.rl.run_utils import run_sg
-from seagul.rl.ppo import ppo, PPOModel
-from seagul.nn import MLP
-from seagul.integration import euler
-import seagul.envs
 
 #from seagul.integrationx import euler
 
@@ -85,7 +87,6 @@ for seed in np.random.randint(0, 2 ** 32, 8):
         "lam": .2,
         "gamma": .95,
         "sgd_epochs" : 50,
-        "normalize_return": True,
         "env_config": env_config,
     }
 
@@ -93,7 +94,7 @@ for seed in np.random.randint(0, 2 ** 32, 8):
 
     p = Process(
         target=run_sg,
-        args=(alg_config, ppo, "ppo", "", "/data2/2d/" + trial_num + "/" + "seed" + str(seed)),
+        args=(alg_config, ppo_dim, "ppo", "", "/data22/dim/2d" + trial_num + "/" + "seed" + str(seed)),
     )
     p.start()
     proc_list.append(p)
